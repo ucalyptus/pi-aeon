@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Warm Aeon toolchain
+        # The verifier shells out to `uvx aeonlang`; prime the environment so
+        # test timing reflects verification, not package downloads.
+        run: uvx --from aeonlang aeon --version
+      - name: Test
+        run: bun test
+
+  lint-installer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck installer
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          files: install/install.sh
+
+  build-macos:
+    # Release targets are macOS-only this release; verify they compile and that
+    # the dispatch entrypoint fails correctly without a prompt.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build darwin binaries
+        run: |
+          for t in darwin-arm64 darwin-x64; do
+            bun build --compile --target=bun-$t src/main.ts --outfile dist/pi-aeon-$t
+          done
+      - name: Smoke test (usage path, no model access needed)
+        run: |
+          set +e
+          out=$(./dist/pi-aeon-darwin-arm64 --headless 2>&1); code=$?
+          set -e
+          echo "$out"
+          [ "$code" -eq 2 ] || { echo "expected exit 2, got $code"; exit 1; }
+          echo "$out" | grep -q 'usage: pi-aeon --headless' || { echo "missing usage text"; exit 1; }
+          ./dist/pi-aeon-darwin-arm64 --headless --workspace /tmp "x" >/dev/null 2>&1 && {
+            echo "--headless leaked into prompt parsing"; exit 1
+          } || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pi-aeon-darwin
+          path: dist/pi-aeon-darwin-*
+          retention-days: 7
