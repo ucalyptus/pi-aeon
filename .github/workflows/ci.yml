@@ -28,7 +28,7 @@ jobs:
       - name: ShellCheck installer
         uses: ludeeus/action-shellcheck@2.0.0
         with:
-          files: install/install.sh
+          additional_files: install/install.sh
 
   build-macos:
     # Release targets are macOS-only this release; verify they compile and that
@@ -45,6 +45,9 @@ jobs:
             bun build --compile --target=bun-$t src/main.ts --outfile dist/pi-aeon-$t
           done
       - name: Smoke test (usage path, no model access needed)
+        # Flag-leak prevention is asserted by unit tests in the test job;
+        # here we only pin the binary dispatch contract: --headless without
+        # a prompt must print usage and exit 2.
         run: |
           set +e
           out=$(./dist/pi-aeon-darwin-arm64 --headless 2>&1); code=$?
@@ -52,9 +55,6 @@ jobs:
           echo "$out"
           [ "$code" -eq 2 ] || { echo "expected exit 2, got $code"; exit 1; }
           echo "$out" | grep -q 'usage: pi-aeon --headless' || { echo "missing usage text"; exit 1; }
-          ./dist/pi-aeon-darwin-arm64 --headless --workspace /tmp "x" >/dev/null 2>&1 && {
-            echo "--headless leaked into prompt parsing"; exit 1
-          } || true
       - uses: actions/upload-artifact@v4
         with:
           name: pi-aeon-darwin
