@@ -3,3 +3,5 @@ node_modules/
 workspace-demo/pi-aeon-audit.jsonl
 *.probe.ae
 workspace-demo/published.log
+
+dist/
