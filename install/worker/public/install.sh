@@ -13,6 +13,9 @@ INSTALL_DIR="${PI_AEON_INSTALL_DIR:-$HOME/.local/bin}"
 log() { printf '%s\n' "[pi-aeon] $*" >&2; }
 fail() { printf '%s\n' "[pi-aeon] ERROR: $*" >&2; exit 1; }
 
+need() { command -v "$1" >/dev/null 2>&1 || fail "$1 is required"; }
+need uname; need shasum || need sha256sum
+
 # ---- platform detection ----------------------------------------------------
 os=$(uname -s)
 arch=$(uname -m)
@@ -35,7 +38,10 @@ if [ -n "${PI_AEON_VERSION:-}" ]; then
 else
   version=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
     "https://github.com/${REPO}/releases/latest" | sed 's|.*/tag/||')
-  [ -n "$version" ] || fail "could not determine latest release"
+  case "$version" in
+    v*) : ;;
+    *) fail "could not resolve latest release (got: '$version'). Is the repo public?" ;;
+  esac
 fi
 log "installing pi-aeon ${version}"
 

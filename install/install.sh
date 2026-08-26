@@ -38,7 +38,10 @@ if [ -n "${PI_AEON_VERSION:-}" ]; then
 else
   version=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
     "https://github.com/${REPO}/releases/latest" | sed 's|.*/tag/||')
-  [ -n "$version" ] || fail "could not determine latest release"
+  case "$version" in
+    v*) : ;;
+    *) fail "could not resolve latest release (got: '$version'). Is the repo public?" ;;
+  esac
 fi
 log "installing pi-aeon ${version}"
 
