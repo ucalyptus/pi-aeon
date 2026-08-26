@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pi-aeon — formally verified agent harness</title>
+<style>
+  body { font-family: ui-monospace, Menlo, monospace; background:#0b0e14; color:#c9d1d9;
+         max-width: 46rem; margin: 4rem auto; padding: 0 1.5rem; line-height: 1.6; }
+  h1 { color: #58d68d; } code, pre { background:#161b22; border-radius:6px; padding:.15rem .4rem; }
+  pre { padding: 1rem; overflow-x: auto; border:1px solid #21262d; }
+  .ok { color:#58d68d; } .bad { color:#f85149; } a { color:#58a6ff; }
+</style>
+</head>
+<body>
+<h1>pi-aeon</h1>
+<p>An agent harness where <b>formal verification is part of the agent loop</b> —
+built on <a href="https://github.com/earendil-works/pi">@earendil-works/pi-agent-core</a>,
+policies as refinement types, proven by <a href="https://github.com/alcides/aeon">Aeon</a>/Z3.</p>
+
+<h2>Install</h2>
+<pre>curl -fsSL https://aeon.ucalyptus.me/install.sh | sh</pre>
+
+<h2>The policy</h2>
+<pre><span class="ok">def do_read</span> (r:Resource) (s:Session) :
+    {s2:Session | tainted s2 = (private_r r || tainted s)} := native "None";
+
+<span class="ok">def do_publish</span> (s:{s:Session | tainted s = false}) : Unit := native "None";</pre>
+<p>Read private data → session tainted → publication becomes <i>unprovable</i>,
+hence impossible. Every tool call is checked by Z3 before it executes; a failed
+proof obligation is fed back to the model verbatim.</p>
+
+<h2>Links</h2>
+<ul>
+<li>Source &amp; docs: <a href="https://github.com/ucalyptus/pi-aeon">github.com/ucalyptus/pi-aeon</a></li>
+<li>Releases: <a href="https://github.com/ucalyptus/pi-aeon/releases">v0.1.0+</a></li>
+</ul>
+</body>
+</html>

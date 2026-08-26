@@ -1,0 +1,6 @@
+{
+  "name": "pi-aeon-install",
+  "compatibility_date": "2026-07-01",
+  "assets": { "directory": "./public" },
+  "routes": [{ "pattern": "aeon.ucalyptus.me", "custom_domain": true }]
+}
