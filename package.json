@@ -1,0 +1,20 @@
+{
+  "name": "pi-aeon",
+  "version": "0.1.0",
+  "description": "Agent harness where every tool call is a transition in a formally verified state machine (refinement types via Aeon/Z3), built on @earendil-works/pi-agent-core.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "test": "bun test",
+    "replay": "bun run scripts/replay.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "0.84.3",
+    "@earendil-works/pi-ai": "0.84.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typebox": "^1.0.0"
+  }
+}

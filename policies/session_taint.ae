@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# pi-aeon formal policy: the agent session is a state machine whose states are
+# Sessions and whose transitions are tool calls. The policy below IS the
+# specification; Aeon's refinement type checker (Z3) proves every executed
+# trace satisfies it.
+#
+# Core invariant (anti-exfiltration, "lethal trifecta" leg 3):
+#   a session that has ever read a private resource can never publish.
+# ---------------------------------------------------------------------------
+
+type Session    # symbolic agent-session state
+type Resource   # a resource a tool may touch (file path, sink, ...)
+
+# Uninterpreted measures: the only facts the prover knows about states.
+def tainted   : (s:Session) -> Bool     := uninterpreted
+def private_r : (r:Resource) -> Bool    := uninterpreted
+
+# Trusted constructors. `fresh` is the initial harness state: nothing read yet.
+def fresh      : {s:Session | tainted s = false}       := native "None"
+def mk_private : {r:Resource | private_r r = true}     := native "None"
+def mk_public  : {r:Resource | private_r r = false}    := native "None"
+
+# ---- Transition contracts -------------------------------------------------
+# Each contract's refinement type is a trusted summary of the tool semantics;
+# the checker verifies that every *sequence* of calls preserves the policy.
+
+# Reading taints the session iff the resource was private (taint is monotone).
+def do_read (r:Resource) (s:Session) :
+    {s2:Session | tainted s2 = (private_r r || tainted s)} :=
+    native "None";
+
+# Writing to any local resource never taints (egress is not ingress).
+def do_write (r:Resource) (s:Session) :
+    {s2:Session | tainted s2 = tainted s} :=
+    native "None";
+
+# External publication. The precondition is the whole policy:
+# rejected at verification time whenever the session is tainted.
+def do_publish (s:{s:Session | tainted s = false}) : Unit :=
+    native "None";
+
+# Neutral terminal for probe programs; imposes no obligation.
+def sink (s:Session) : Unit := native "None";
