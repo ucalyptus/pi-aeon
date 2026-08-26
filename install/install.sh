@@ -14,22 +14,20 @@ log() { printf '%s\n' "[pi-aeon] $*" >&2; }
 fail() { printf '%s\n' "[pi-aeon] ERROR: $*" >&2; exit 1; }
 
 need() { command -v "$1" >/dev/null 2>&1 || fail "$1 is required"; }
-need uname; need shasum || need sha256sum
+need uname
+need curl
+need shasum
 
-# ---- platform detection ----------------------------------------------------
+# ---- platform detection (macOS only this release) ---------------------------
 os=$(uname -s)
+[ "$os" = "Darwin" ] || fail "this release supports macOS only (detected: $os)"
 arch=$(uname -m)
-case "$os" in
-  Darwin) os_name="darwin" ;;
-  Linux) os_name="linux" ;;
-  *) fail "unsupported OS: $os (supported: macOS, Linux)" ;;
-esac
 case "$arch" in
   arm64|aarch64) arch_name="arm64" ;;
   x86_64|amd64) arch_name="x64" ;;
-  *) fail "unsupported architecture: $arch" ;;
+  *) fail "unsupported Mac architecture: $arch" ;;
 esac
-target="${os_name}-${arch_name}"
+target="darwin-${arch_name}"
 log "detected platform: $target"
 
 # ---- resolve version -------------------------------------------------------
@@ -38,9 +36,10 @@ if [ -n "${PI_AEON_VERSION:-}" ]; then
 else
   version=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
     "https://github.com/${REPO}/releases/latest" | sed 's|.*/tag/||')
+  [ -n "$version" ] || fail "could not determine latest release"
   case "$version" in
     v*) : ;;
-    *) fail "could not resolve latest release (got: '$version'). Is the repo public?" ;;
+    *) fail "could not resolve latest release (got: '$version')" ;;
   esac
 fi
 log "installing pi-aeon ${version}"
@@ -58,11 +57,7 @@ curl -fsSL "${base}/SHA256SUMS" -o "${tmp}/SHA256SUMS"
 expected=$(grep " ${asset}\$" "${tmp}/SHA256SUMS" | cut -d' ' -f1)
 [ -n "$expected" ] || fail "no checksum found for ${asset}"
 
-if command -v shasum >/dev/null 2>&1; then
-  actual=$(shasum -a 256 "${tmp}/${asset}" | cut -d' ' -f1)
-else
-  actual=$(sha256sum "${tmp}/${asset}" | cut -d' ' -f1)
-fi
+actual=$(shasum -a 256 "${tmp}/${asset}" | cut -d' ' -f1)
 [ "$actual" = "$expected" ] || fail "checksum mismatch:
   expected $expected
   actual   $actual"

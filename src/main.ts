@@ -6,9 +6,12 @@
  *   pi-aeon --tui                 force the interactive UI
  *   pi-aeon --headless "<prompt>" force the print-style runner
  */
-const wantsHeadless = process.argv.includes("--headless");
-const wantsTui = process.argv.includes("--tui");
+import { parseArgs } from "./args.ts";
+
+const parsed = parseArgs(process.argv.slice(2));
 const interactive = process.stdin.isTTY && process.stdout.isTTY;
+const wantsHeadless = parsed.explicitMode === "headless";
+const wantsTui = parsed.explicitMode === "tui";
 
 // Dynamic import is required here: cli.ts and tui.ts are top-level scripts
 // (each boots its own UI on import). A static import of either module would

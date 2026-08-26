@@ -17,13 +17,14 @@ import {
   Text,
   TuiMainScreen,
 } from "@earendil-works/pi-tui";
+import { parseArgs } from "./args.ts";
 import { createVerifiedAgent, defaultModel } from "./harness.ts";
 
-const args = process.argv.slice(2);
-let workspace = process.env.PI_AEON_WORKSPACE ?? ".";
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === "--workspace") workspace = args[++i]!;
-}
+const parsed = parseArgs(process.argv.slice(2));
+// Harness construction reads the workspace from the environment; both this
+// entrypoint and the binary dispatch in main.ts converge here.
+if (parsed.workspace) process.env.PI_AEON_WORKSPACE = parsed.workspace;
+const workspace = process.env.PI_AEON_WORKSPACE ?? ".";
 
 const policy = {
   workspaceRoot: resolve(workspace),

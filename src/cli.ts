@@ -1,22 +1,17 @@
 /**
- * pi-aeon CLI: run a verified agent session.
+ * pi-aeon headless runner. Interactive users: run `pi-aeon` with no flags.
  *
- *   bun run src/cli.ts --workspace <dir> "<prompt>"
+ *   pi-aeon --headless [--workspace <dir>] "<prompt>"
  */
 import { join, resolve } from "node:path";
 import { createVerifiedAgent, defaultModel } from "./harness.ts";
+import { parseArgs } from "./args.ts";
 
-const args = process.argv.slice(2);
-let workspace = process.env.PI_AEON_WORKSPACE ?? ".";
-let promptParts: string[] = [];
-
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === "--workspace") workspace = args[++i]!;
-  else promptParts.push(args[i]!);
-}
-const prompt = promptParts.join(" ").trim();
+const parsed = parseArgs(process.argv.slice(2));
+const workspace = parsed.workspace ?? process.env.PI_AEON_WORKSPACE ?? ".";
+const prompt = parsed.promptWords.join(" ").trim();
 if (!prompt) {
-  console.error("usage: bun run src/cli.ts [--workspace dir] \"<prompt>\"");
+  console.error('usage: pi-aeon --headless [--workspace dir] "<prompt>"');
   process.exit(2);
 }
 
