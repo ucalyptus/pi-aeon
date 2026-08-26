@@ -104,7 +104,8 @@ bun run replay workspace-demo/pi-aeon-audit.jsonl
 
 ## Requirements
 
-- macOS (arm64/x64) for the packaged binary; Linux works from source via Bun.
+- macOS, arm64 or x64. This release supports macOS only; the installer rejects
+  other platforms explicitly.
 - [`uv`](https://docs.astral.sh/uv/) — the verifier shells out to `uvx aeonlang`
   (~44s on first run while packages install, ~2s after).
 - An OpenRouter API key for the model.
