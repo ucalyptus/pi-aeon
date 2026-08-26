@@ -42,6 +42,32 @@ Inside `AgentLoopConfig` — the loop's own choke point — not in an extension:
 
 Fail-closed: verifier unavailable or timing out blocks the call.
 
+## TUI
+
+Interactive terminal UI built on pi's own rendering library (`@earendil-works/pi-tui`,
+same process as the harness — no IPC):
+
+```bash
+bun run src/tui.ts --workspace ./workspace-demo
+```
+
+Top panel shows the live proof state (transitions committed, taint status,
+current obligation); verdicts stream into the transcript as the loop emits them:
+
+```
+  → read_file
+  ✓ verified  read private/notes.md [private via private/**]
+    committed transition #1
+  → publish_post
+  ✗ REJECTED  publish "Acme Corp's Q3 plan…" — Policy violated: cannot prove (tainted(s1) == false)
+```
+
+`PI_AEON_OPAQUE=1 bun run src/tui.ts` hides the policy from the model
+(neutral tool descriptions, no proof-state injection) while keeping
+enforcement fully active.
+
+Headless mode stays available via `bun run src/cli.ts`.
+
 ## Run
 
 ```bash
